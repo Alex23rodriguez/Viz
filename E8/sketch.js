@@ -170,14 +170,17 @@ function setup() {
     radii[2].position(160, 460)
     radii[3].position(160, 490)
     
-    radiusSpread = createSlider(0,3,1,0.02)//layerModes.lenght-1,0,1)
-    radiusSpread.position(300, 110)
-    
-    layerMode = createSlider(0,3,0,1)//layerModes.lenght-1,0,1)
-    layerMode.position(300, 170)
-    
     strokeW = createSlider(0.05,2,0.7, 0.05)//layerModes.lenght-1,0,1)
     strokeW.position(300, 50)
+    
+    radiusSpread = createSlider(0,3,1,0.02)//layerModes.lenght-1,0,1)
+    radiusSpread.position(300, 100)
+    
+    layerMode = createSlider(0,3,0,1)//layerModes.lenght-1,0,1)
+    layerMode.position(300, 150)
+    
+    fade = createSlider(0,0.5, 0.5, 0.0005)//layerModes.lenght-1,0,1)
+    fade.position(300, 200)
       
     
       //print(rotation)
@@ -215,7 +218,7 @@ function draw() {
     
     translate(width*2/3, height/2)
     fill(255)
-    background(0)
+    background(0, fade.value())
     //print(points)
     //print(budge(points))
     points = budge(points)
@@ -241,8 +244,9 @@ function draw() {
     text('Nodes per layer', 15, 40)
     text('Rotation', 175, 40)
     text('Width', 350, 40)
-    text('Spread', 350, 100)    
-    text('Color Mode', 335, 160) 
+    text('Spread', 350, 90)    
+    text('Color Mode', 335, 140) 
+    text('Fade', 335, 190) 
     text('Color per layer (Hue / Saturation / Brightness)', 100, 242) 
     text('X Oscilation', 55, 450)
     text('Y Oscilation', 195, 450)
