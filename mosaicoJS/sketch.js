@@ -26,6 +26,9 @@ var shifts;
 var base_radii;
 var top_radii;
 
+var slider;
+var valu;
+var sl;
 
 function x(r, shift){ // polar to cartesian x
     return r*cos(shift);
@@ -122,20 +125,10 @@ function draw_shapes(shapes, l){
     }
 }
 
-function setup() {
-    createCanvas(canvas_size, canvas_size);
-    colorMode(HSB, 1, 1, 1);
-    
+function make(){
     shifts = [];
     base_radii = [];
     top_radii = [];
-    if(!init_r){
-        init_r=width/4/(layers);
-    }
-    if(!delta_r){
-        delta_r = (width/2-init_r)/(layers-1);
-    }
-    
     for(i=0; i<layers;i++){
         // make sure every shape will be convex
         var nodes = nod(i);
@@ -149,40 +142,87 @@ function setup() {
         base_radii.push(r);        
         top_radii.push(R);
     }
-    
-    /*
-    for(i=0; i<layers; i++){
-        circles.push([]);
-        circles[i].push([]);
-        circles[i].push([]);
-        var nodes = start + add*i;
-        
-        var r = h*i + init_r;
-        
-        var len_side = sqrt(sq(1-cos(2*PI/(nodes+add))) + sq(sin(2*PI/(nodes+add))));
+}
 
-        var sh = random(2*PI);
-        //sh = 0;
-        var R = sqrt(1 - sq(len_side/2))*(h*(i+1)+init_r) - r;
-        
-        R = random(r + R*v_wiggle, r+R)
-        
-        for(j=0; j<nodes; j++){
-            circles[i][0].push(xy(r, j, nodes, sh));
-            circles[i][1].push(xy(R, j, nodes, sh));
-        }
+function setup() {
+    valu = 0;
+    canMove = false;
+    createCanvas(canvas_size*1.75, canvas_size);
+    colorMode(HSB, 1, 1, 1);
+    
+    if(!init_r){
+        init_r=width/4/(layers);
     }
-    */
+    if(!delta_r){
+        delta_r = (height/2-init_r)/(layers-1);
+    }
+
+    make();
     
-    //print(top_radii)
+    sl = [
+        [3, 20, start, 1, 'start = slid.value()'],
+        [0, 30, arit_growth, 1, 'arit_growth = slid.value()'],
+        [1, 50, layers, 1, 'layers = slid.value(); delta_r = (height/2-init_r)/(layers-1); make()'],
+        [0, 1, v_wiggle[0], 0.01, 'v_wiggle[0] = slid.value(); make()'],//; v_wiggle[1] = max(v_wiggle[0], v_wiggle[1]);'],
+        [0, 1, v_wiggle[1], 0.01, 'v_wiggle[1] = slid.value(); make()'],//; v_wiggle[0] = min(v_wiggle[0], v_wiggle[1]);'],
+        [0, 10, color_loops, 0.01, 'color_loops = slid.value()'],
+        [0, 1, color_shift, 0.01, 'color_shift = slid.value()'],
+        [0, 1, hue_start, 0.01, 'hue_start = slid.value()'],
+        [-5, 5, vertical_hue_shift, 0.1, 'vertical_hue_shift = slid.value()'],
+        [0, 1, sat[0], 0.01, 'sat[0] = slid.value()'],//; sat[1] = max(sat[0], sat[1])'],
+        [0, 1, sat[1], 0.01, 'sat[1] = slid.value()'],//; sat[0] = min(sat[0], sat[1])'],
+        [0, 1, bright[0], 0.01, 'bright[0] = slid.value()'],//; bright[1] = max(bright[0], bright[1])'],
+        [0, 1, bright[1], 0.01, 'bright[1] = slid.value()'],//; bright[0] = min(bright[0], bright[1])'],
+        [0, 1, vertical_sat_shift[0], 0.01, 'vertical_sat_shift[0] = slid.value()'],
+        [0, 1, vertical_sat_shift[1], 0.01, 'vertical_sat_shift[1] = slid.value()'],
+        [0, 1, vertical_bright_shift[0], 0.01, 'vertical_bright_shift[0] = slid.value()'],
+        [0, 1, vertical_bright_shift[1], 0.01, 'vertical_bright_shift[1] = slid.value()'],
+        [0, 1, grayscale, 0.01, 'grayscale = slid.value()'],
+        [0, 1, color_spectrum[0], 0.01, 'color_spectrum[0] = slid.value()'],//; color_spectrum[1] = max(color_spectrum[0], color_spectrum[1])'],
+        [0, 1, color_spectrum[1], 0.01, 'color_spectrum[1] = slid.value()'],//; color_spectrum[0] = min(color_spectrum[0], color_spectrum[1])'],
+    ]
     
-    noLoop();
+    for(var i=0; i<sl.length; i++){
+        slider = createSlider(sl[i][0],sl[i][1],sl[i][2], sl[i][3]);
+        text(sl[i][4].split(' ')[0], 130, 70 + 30*i)
+        slider.position(230, 70 + 30*i);
+        slider.touchStarted(function(){slid = this});
+        slider.fn = sl[i][4]
+    }
+    slid = slider
+    
+    draw_();
+    //noLoop();
+    //frameRate(5)
 }
 
 function draw() {
+    //if(color_shift!=slider.value()){
+    //    color_shift = slider.value();
+    //    draw_()
+    //}
+    
+    //if(mouseIsPressed && mouseX>100 && mx!=mouseX){
+    if(valu != slid.value()){
+        eval(slid.fn)
+        draw_()
+    }
+    valu = slid.value()
+    
+}
+    
+function draw_(){
     background(0);
+    stroke(1)
+    fill(.2)
+    rect(30,30, 430, height-60)
+    fill(1)
+    for(var i=0; i<sl.length; i++){
+        text(sl[i][4].split(' ')[0], 70, 75 + 30*i)
+        text(eval(sl[i][4].split(' ')[0]), 390, 75 + 30*i)
+    }
     push();
-    translate(width/2, height/2);
+    translate(width*2/3, height/2);
     strokeWeight(1);
     stroke(0);
     
