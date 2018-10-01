@@ -9,7 +9,7 @@ var color_shift = 0                // [0, 1] how far along the hue spectrum a gi
 var hue_start = 0                // [0, 1] where in the hue spectrum the colors will start
 var sat = [.2, 1]                  // [min, max]
 var bright = [0.6, .9]                // [min, max]  
-var vertical_hue_shift = 1       // number of loops in a given direction
+var vertical_hue_shift = 0      // number of loops in a given direction
 var vertical_sat_shift = [.6, 1]     // [init_val, end_val]
 var vertical_bright_shift = [1, .2]  // [init_val, end_val]
 
@@ -17,6 +17,12 @@ var grayscale = 0;
 var color_spectrum = [0, 1];
 
 var canvas_size = 750;
+
+rots = [0, 0, 0]
+rots_ = [0.03, 0.0, 0.001]
+limit = [2, .5, .15]
+names = ['hue_start', 'sat[0]', 'vertical_hue_shift', ]
+
 ////////////////////////////////////
 
 var delta_r;
@@ -97,12 +103,13 @@ function re(){
 
 function filler(i, l){
     if(random()<grayscale){
-        fill(((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift + abs(vertical_hue_shift))*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]);
+        fill(((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift/ + abs(vertical_hue_shift))*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]);
     }else{
         fill(
-                (((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift + abs(vertical_hue_shift))*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]), 
-                random(sat[0], sat[1])*((1-l/layers)*vertical_sat_shift[0] + (l/layers)*vertical_sat_shift[1]), 
-                random(bright[0], bright[1])*((1-l/layers)*vertical_bright_shift[0] + (l/layers)*vertical_bright_shift[1])
+                (((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift + 100)*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]), 
+                1,1
+                //random(sat[0], sat[1])*((1-l/layers)*vertical_sat_shift[0] + (l/layers)*vertical_sat_shift[1]), 
+                //random(bright[0], bright[1])*((1-l/layers)*vertical_bright_shift[0] + (l/layers)*vertical_bright_shift[1])
             );
     }
 }
@@ -146,8 +153,8 @@ function make(){
 
 function setup() {
     valu = 0;
-    canMove = false;
-    createCanvas(canvas_size*1.75, canvas_size);
+    //createCanvas(canvas_size*1.75, canvas_size);
+    createCanvas(canvas_size, canvas_size);
     colorMode(HSB, 1, 1, 1);
     
     if(!init_r){
@@ -181,6 +188,7 @@ function setup() {
         [0, 1, color_spectrum[0], 0.01, 'color_spectrum[0] = slid.value()'],//; color_spectrum[1] = max(color_spectrum[0], color_spectrum[1])'],
         [0, 1, color_spectrum[1], 0.01, 'color_spectrum[1] = slid.value()'],//; color_spectrum[0] = min(color_spectrum[0], color_spectrum[1])'],
     ]
+    sl = []
     
     for(var i=0; i<sl.length; i++){
         slider = createSlider(sl[i][0],sl[i][1],sl[i][2], sl[i][3]);
@@ -203,16 +211,31 @@ function draw() {
     //}
     
     //if(mouseIsPressed && mouseX>100 && mx!=mouseX){
-    if(valu != slid.value()){
-        eval(slid.fn)
-        draw_()
+    //if(valu != slid.value()){
+    //    eval(slid.fn)
+    //    draw_()
+    //}
+    //valu = slid.value()
+    for(i=0; i<rots.length; i++){
+        rots[i] += random(-0.2, 0.2)*rots_[i]
+        rots[i] = max(-rots_[i], rots[i])
+        rots[i] = min(rots_[i], rots[i])
+        eval(names[i]+'+=rots[i]')
+        eval(names[i]+'= max('+str(-limit[i])+','+names[i]+')')
+        eval(names[i]+'= min('+str(limit[i])+','+names[i]+')')
     }
-    valu = slid.value()
-    
+
+    hue_start = (hue_start+1) % 1
+    for(i=0; i<shifts.length; i++){
+        //shifts[i] += random(0.05, 0.06)
+        shifts[i] += rots[1]
+    }
+    draw_();
 }
     
 function draw_(){
     background(0);
+    /*
     stroke(1)
     fill(.2)
     rect(30,30, 430, height-60)
@@ -221,8 +244,10 @@ function draw_(){
         text(sl[i][4].split(' ')[0], 70, 75 + 30*i)
         text(eval(sl[i][4].split(' ')[0]), 390, 75 + 30*i)
     }
+    */
     push();
-    translate(width*2/3, height/2);
+    //translate(width*2/3, height/2);
+    translate(width/2, height/2)
     strokeWeight(1);
     stroke(0);
     
