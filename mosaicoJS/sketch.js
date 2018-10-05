@@ -1,29 +1,38 @@
 var start = 5;
-var arit_growth = 5;
+var arit_growth = 3;
 var geo_growth = 1;
 var layers = 20;
-var v_wiggle = [.3, .6]    // [min, max] how pointy or boxy any given layer can be
+var v_wiggle = [0, 1]    // [min, max] how pointy or boxy any given layer can be
 var color_loops = 1;                 // number of times each color will appear in a single cycle
 var color_shift = 0                // [0, 1] how far along the hue spectrum a given color can vary
 
 var hue_start = 0                // [0, 1] where in the hue spectrum the colors will start
-var sat = [.2, 1]                  // [min, max]
-var bright = [0.6, .9]                // [min, max]  
+var sat = [.8, .8]                  // [min, max]
+var bright = [0.9, .9]                // [min, max]  
 var vertical_hue_shift = 0      // number of loops in a given direction
-var vertical_sat_shift = [.6, 1]     // [init_val, end_val]
-var vertical_bright_shift = [1, .2]  // [init_val, end_val]
+var vertical_sat_shift = [.5, .8]     // [init_val, end_val]
+var vertical_bright_shift = [1, 1]  // [init_val, end_val]
 
 var grayscale = 0;
-var color_spectrum = [0, 1];
+var color_spectrum = [0.5, .75];
 
 var canvas_size = 750;
 
 rots = [0, 0, 0]
-rots_ = [0.03, 0.0, 0.001]
-limit = [2, .5, .15]
-names = ['hue_start', 'sat[0]', 'vertical_hue_shift', ]
+//rots_ = [0.03, 0.05, 0.002]
+rots_ = [0.03, 0.005, 0.002]
+limit = [10, .1, 0.05]
+names = ['hue_start', 'sat[0]', 'vertical_hue_shift']
+
+loops = [2, 3, 5]
+offset = [0, 0, 0]
+
+phase = 0;
 
 ////////////////////////////////////
+
+var time = 100;
+var TIME = 500;
 
 var delta_r;
 var init_r// = 30;
@@ -105,12 +114,24 @@ function filler(i, l){
     if(random()<grayscale){
         fill(((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift/ + abs(vertical_hue_shift))*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]);
     }else{
+        if(phase>0){
         fill(
-                (((angle(i, nod(l), shifts[l])/2/PI + random(color_shift) + base_radii[l]/layers*vertical_hue_shift + 100)*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]), 
-                1,1
-                //random(sat[0], sat[1])*((1-l/layers)*vertical_sat_shift[0] + (l/layers)*vertical_sat_shift[1]), 
-                //random(bright[0], bright[1])*((1-l/layers)*vertical_bright_shift[0] + (l/layers)*vertical_bright_shift[1])
+                (((angle(i, nod(l), shifts[l])/2/PI + base_radii[l]/layers*vertical_hue_shift + 100)*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]-sin(time/TIME*2*PI)/10), 
+                //1,1
+                //random(sat[0], sat[1])*
+                //sqrt(min(time/TIME, 1))*
+                min((time-TIME)/TIME, 1)*((1-l/layers)*vertical_sat_shift[0] + (l/layers)*vertical_sat_shift[1]), 
+                //random(bright[0], bright[1])*
+                ((1-l/layers)*vertical_bright_shift[0] + (l/layers)*vertical_bright_shift[1])
             );
+        }else{
+            fill(
+                (((angle(i, nod(l), shifts[l])/2/PI + base_radii[l]/layers*vertical_hue_shift + 100)*color_loops + hue_start)%(color_spectrum[1]-color_spectrum[0])+color_spectrum[0]-sin(time/TIME*2*PI)/10), 
+                0,//((1-l/layers)*vertical_sat_shift[0] + (l/layers)*vertical_sat_shift[1]), 
+                //random(bright[0], bright[1])*
+                sq(min(time/TIME, 1))*((1-l/layers)*vertical_bright_shift[0] + (l/layers)*vertical_bright_shift[1])
+            );
+        }
     }
 }
     
@@ -132,19 +153,33 @@ function draw_shapes(shapes, l){
     }
 }
 
-function make(){
+function make_shifts(){
     shifts = [];
-    base_radii = [];
-    top_radii = [];
     for(i=0; i<layers;i++){
         // make sure every shape will be convex
         var nodes = nod(i);
         shifts.push(random(2*PI/nodes));
-        
-        var r = delta_r*i + init_r;
+    }
+}
+
+function make_radii(){
+    base_radii = [];
+    top_radii = [];
+    ttt = sqrt(cos(time/TIME*2*PI*10)/2 + 0.5);
+    ///ttt = time/TIME;
+    delta_r -= cos(time/TIME*2*PI*10)/3
+    if(phase==3){
+        delta_r *= 0.97;
+        init_r*=.97;
+    }
+    var r = init_r - delta_r;
+    for(i=0; i<layers; i++){
+        r += delta_r;
         var len_side = sqrt(sq(1-cos(2*PI/nod(i+1))) + sq(sin(2*PI/nod(i+1))));
         var R = sqrt(1 - sq(len_side/2))*(delta_r*(i+1)+init_r) - r;
-        R = random(r + R*v_wiggle[0], r+R*v_wiggle[1]);
+        //R = random(r + R*v_wiggle[0], r+R*v_wiggle[1]);
+        //R = r + R*v_wiggle[0], r+R*v_wiggle[1];
+        R = r + R*ttt;
         
         base_radii.push(r);        
         top_radii.push(R);
@@ -164,8 +199,9 @@ function setup() {
         delta_r = (height/2-init_r)/(layers-1);
     }
 
-    make();
-    
+    make_shifts();
+    make_radii();
+    /*
     sl = [
         [3, 20, start, 1, 'start = slid.value()'],
         [0, 30, arit_growth, 1, 'arit_growth = slid.value()'],
@@ -188,8 +224,9 @@ function setup() {
         [0, 1, color_spectrum[0], 0.01, 'color_spectrum[0] = slid.value()'],//; color_spectrum[1] = max(color_spectrum[0], color_spectrum[1])'],
         [0, 1, color_spectrum[1], 0.01, 'color_spectrum[1] = slid.value()'],//; color_spectrum[0] = min(color_spectrum[0], color_spectrum[1])'],
     ]
+    */
     sl = []
-    
+     
     for(var i=0; i<sl.length; i++){
         slider = createSlider(sl[i][0],sl[i][1],sl[i][2], sl[i][3]);
         text(sl[i][4].split(' ')[0], 130, 70 + 30*i)
@@ -216,20 +253,40 @@ function draw() {
     //    draw_()
     //}
     //valu = slid.value()
+    /*
     for(i=0; i<rots.length; i++){
-        rots[i] += random(-0.2, 0.2)*rots_[i]
-        rots[i] = max(-rots_[i], rots[i])
-        rots[i] = min(rots_[i], rots[i])
-        eval(names[i]+'+=rots[i]')
-        eval(names[i]+'= max('+str(-limit[i])+','+names[i]+')')
-        eval(names[i]+'= min('+str(limit[i])+','+names[i]+')')
+        //rots[i] += cos(time/TIME*2*PI)/1000000; //random(-0.2, 0.2)*rots_[i]
+        //rots[i] = max(-rots_[i], rots[i])
+        //rots[i] = min(rots_[i], rots[i])
+        eval(names[i]+'+=rots[i]');
+        eval(names[i]+'= max('+str(-limit[i])+','+names[i]+')');
+        eval(names[i]+'= min('+str(limit[i])+','+names[i]+')');
     }
-
-    hue_start = (hue_start+1) % 1
-    for(i=0; i<shifts.length; i++){
-        //shifts[i] += random(0.05, 0.06)
-        shifts[i] += rots[1]
+    */
+    
+    //rots[0] = cos(time/TIME*2*PI)/50;
+    
+    if(phase>1){
+        hue_start += sin(time/TIME*2*PI*loops[0]+offset[0])/30;
+        vertical_hue_shift = sin(time/TIME*2*PI*loops[1]+offset[1])/20;
+    
+        hue_start = (hue_start+1) % 1;
+        for(i=0; i<shifts.length; i++){
+            //shifts[i] += random(0.05, 0.06)
+            shifts[i] += sin(time/TIME*2*PI*loops[2]+offset[2])/20;
+        }
     }
+     make_radii();
+    time+=1;
+    if(time%TIME==0){
+        phase += 1;
+        //noLoop();
+    }
+    if(phase == 4){
+        noLoop();
+    }
+    
+    
     draw_();
 }
     
